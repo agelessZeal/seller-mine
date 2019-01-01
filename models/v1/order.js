@@ -1,0 +1,41 @@
+let mongoose = require('mongoose');
+let Schema = mongoose.Schema;
+
+let OrderSchema = new Schema({
+    AmazonOrderId: String,
+    MarketplaceId: String,
+    SellerOrderId: String,
+    sellerId: String,
+    OrderType: String,
+    IsReplacementOrder: Boolean,
+    BuyerEmail: String,
+    BuyerName: String,
+    NumberOfItemsShipped: String,
+    ShipServiceLevel: String,
+    OrderStatus: String,
+    SalesChannel: String,
+    IsBusinessOrder: Boolean,
+    NumberOfItemsUnshipped: String,
+    PaymentMethodDetails: Object,
+    IsPremiumOrder: Boolean,
+    OrderTotal: Object,
+    FulfillmentChannel: String,
+    PaymentMethod: String,
+    ShippingAddress: Object,
+    IsPrime: Boolean,
+    ShipmentServiceLevelCategory: String,
+    sent_email_status: {type: Boolean, default: false},
+    number_of_email_sent: {type: Number, default: 0},
+    haveItem: {type: Boolean, default: false},
+    haveFeedback: {type: Boolean, default: false},
+    orderItem: [{type: Schema.Types.ObjectId, ref: 'OrderItem'}],
+    feedback: [{type: Schema.Types.ObjectId, ref: 'Feedback'}],
+    EarliestShipDate: Date,
+    LastUpdateDate: Date,
+    PurchaseDate: Date,
+    LatestShipDate: Date,
+    createdAt: Date,
+    updatedAt: Date,
+},{ usePushEach: true });
+
+module.exports = mongoose.model('order', OrderSchema);
