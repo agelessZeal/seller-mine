@@ -71,8 +71,8 @@ app.use((req, res, next) => {
 });
 
 schedule = require('node-schedule');
-schedule.scheduleJob("*/1 * * * *", function () { // every 1 min
-// schedule.scheduleJob("0 0 */12 * * *", function () { // every 12 hour
+// schedule.scheduleJob("*/15 * * * *", function () { // every 15 min
+schedule.scheduleJob("0 0 */12 * * *", function () { // every 12 hour
     console.log('-----------------------Start Product Scheduling-------------------------');
     pdt_controller.getProductSchedule();
     console.log('-----------------------Start Order Scheduling---------------------------');
