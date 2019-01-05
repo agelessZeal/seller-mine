@@ -1,5 +1,7 @@
 module.exports = {
 
+    test_mode:true,
+
     // Secret key for JWT signing and encryption
     secret: 'super secret passphrase',
 

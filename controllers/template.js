@@ -67,7 +67,7 @@ exports.createTemplate = function (req, res, next) {
 
     var with_other_return = 0;
     var with_other_repeat_buyer = 0;
-    
+
 
 
     for(let i = 0; i < getExOrder.length; i++){
@@ -121,7 +121,7 @@ exports.createTemplate = function (req, res, next) {
   tData.exclude_products_type = req.body.exclude_products_type;
 
   // include product
-    // 
+    //
 
     const templateData = new Template(tData);
     //console.log(req.body);
@@ -166,7 +166,7 @@ exports.update = function (req, res, next) {
         if (err) {
             res.send(err);
         }
-        
+
         templateData.template_name = req.body.template_name;
         templateData.email_subject = req.body.email_subject;
         templateData.template_type = req.body.template_type;
@@ -189,8 +189,8 @@ exports.update = function (req, res, next) {
                   //console.log('successfully deleted '+templateData.logo);
                 });
             }
-            
-            
+
+
             let logo = templateFileUpload(req.files.logo);
             templateData.logo = logo;
             //console.log("UpLogo "+logo);
@@ -206,7 +206,7 @@ exports.update = function (req, res, next) {
                   //console.log('successfully deleted '+templateData.email_attachment);
                 });
             }
-            
+
             let email_attachment = templateFileUpload(req.files.email_attachment);
             templateData.email_attachment = email_attachment;
             //console.log("UpAttachment "+email_attachment);
@@ -233,7 +233,7 @@ exports.update = function (req, res, next) {
 
         var with_other_return = 0;
         var with_other_repeat_buyer = 0;
-        
+
 
 
         for(let i = 0; i < getExOrder.length; i++){
@@ -321,7 +321,7 @@ exports.unsubscribes = function (req, res, next) {
         if (err) {
             res.send(err);
         }
-        
+
         res.redirect(req.query.appUrl);
     });
 };
@@ -334,21 +334,21 @@ exports.unsubscribeStats = function (req, res, next) {
     if(start_date && end_date){
         end_date = new Date(end_date);
         end_date = new Date(new Date(end_date).setMonth(end_date.getMonth()+1));
-        
+
         Unsubscribe.aggregate([
-            { 
-                $match: { 
+            {
+                $match: {
                     'createdAt': {
-                        $gte: new Date(start_date), 
+                        $gte: new Date(start_date),
                         $lt: new Date(end_date)
                     },
                     'user_id': user_id
-              } 
+              }
 
             },
-            { 
+            {
                 $group: {
-                    _id: {$substr: ['$createdAt', 0, 7]}, 
+                    _id: {$substr: ['$createdAt', 0, 7]},
                     totalUnsubscribe: {$sum: 1}
                 }
             },
@@ -361,14 +361,14 @@ exports.unsubscribeStats = function (req, res, next) {
         });
     }else{
         Unsubscribe.aggregate([
-            { 
+            {
                 $match: {
                     'user_id': user_id
                 }
             },
-            { 
+            {
                 $group: {
-                    _id: {$substr: ['$createdAt', 0, 7]}, 
+                    _id: {$substr: ['$createdAt', 0, 7]},
                     totalUnsubscribe: {$sum: 1}
                 }
             },
@@ -388,7 +388,9 @@ exports.unsubscribeStats = function (req, res, next) {
 // need user id
 exports.list = function (req, res, next) {
     var user_id = req.query.userId;
-    // var user_id = "5b8d2195df84c010229fd2df";
+    if (config.test_mode) {
+        user_id = "5b8d2195df84c010229fd2df";
+    }
     Template.find({user_id: user_id}).limit(100).exec(function (err, templates) {
         if (err) {
             //console.log(err);
@@ -431,7 +433,7 @@ function templateFileUpload (myFile) {
     });
 
     return '/upload_files/'+file_name;
-    
+
 }
 
 exports.templateAnalysis = function(req, res, next){
@@ -443,20 +445,20 @@ exports.templateAnalysis = function(req, res, next){
 
     if(start_date && end_date){
         OrderEmailStat.aggregate([
-            { 
-                $match: 
-                { 
+            {
+                $match:
+                {
                     temp_id: tempId,
                     createdAt: {
-                        $gte: new Date(start_date), 
+                        $gte: new Date(start_date),
                         $lte: new Date(end_date)
                     }
-                } 
+                }
 
             },
-            { 
+            {
                 $group: {
-                  _id: { $substr: ['$createdAt', 0, 10] }, 
+                  _id: { $substr: ['$createdAt', 0, 10] },
                   "totalEmailSent": { "$sum": 1},
                 }
             }
@@ -465,15 +467,15 @@ exports.templateAnalysis = function(req, res, next){
         });
     }else{
         OrderEmailStat.aggregate([
-            { 
-                $match: 
-                { 
+            {
+                $match:
+                {
                     temp_id: tempId
-                } 
+                }
             },
-            { 
+            {
                 $group: {
-                  _id: { $substr: ['$createdAt', 0, 10] }, 
+                  _id: { $substr: ['$createdAt', 0, 10] },
                   "totalEmailSent": { "$sum": 1},
                 }
             }
@@ -481,5 +483,5 @@ exports.templateAnalysis = function(req, res, next){
             return res.status(200).json({template_analysis: orderSentEmailStat});
         });
     }
-    
+
 };

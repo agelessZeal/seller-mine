@@ -6,7 +6,6 @@ const Schema = mongoose.Schema;
 //= ===============================
 // Product Schema
 //= ===============================
-
 const ProductSchema = new Schema({
         item_name: { type: String },
         item_description: { type: String },

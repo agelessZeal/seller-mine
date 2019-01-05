@@ -180,6 +180,11 @@ module.exports = BaseController.extend({
             prevOderItem.itemId = orderItemInfo.OrderItemId;
             prevOderItem.orderIds = [];
             prevOderItem.updatedAt = new Date();
+
+            prevOderItem.PurchaseDate = new Date(prevOderItem.PurchaseDate);
+            prevOderItem.LastUpdateDate = new Date(prevOderItem.LastUpdateDate);
+            prevOderItem.EarliestShipDate = new Date(prevOderItem.EarliestShipDate);
+
             if (orderItemInfo.hasOwnProperty('ItemPrice')) {
                 prevOderItem.price = orderItemInfo.ItemPrice.Amount;
                 prevOderItem.currency = orderItemInfo.ItemPrice.CurrencyCode;
@@ -214,6 +219,11 @@ module.exports = BaseController.extend({
             let insertRes = await OrderItemModel.collection.insertOne(orderItemObj);
             let orderInfo = await OrderModel.findOne({AmazonOrderId: amazonOrderID});
             orderInfo.haveItem = true;
+
+            orderInfo.PurchaseDate = new Date(orderInfo.PurchaseDate);
+            orderInfo.LastUpdateDate = new Date(orderInfo.LastUpdateDate);
+            orderInfo.EarliestShipDate = new Date(orderInfo.EarliestShipDate);
+
             orderInfo.orderItem.push(insertRes.insertedId);
             await orderInfo.save();
         }

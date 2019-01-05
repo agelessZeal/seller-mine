@@ -6,11 +6,12 @@ const express = require('express'),
   router = require('./router'),
   mongoose = require('mongoose'),
   socketEvents = require('./socketEvents'),
-  config = require('./config/main'),
-  cors = require('cors'),
-  fileUpload = require('express-fileupload'),
-  pdt_controller = require('./controllers/v1/ProductController'),
+  config = require('./config/main');
+  cors = require('cors');
+  fileUpload = require('express-fileupload');
+  pdt_controller = require('./controllers/v1/ProductController');
   order_controller = require('./controllers/v1/OrderController');
+  feedback_controller = require('./controllers/v1/FeedbackController');
 
 // Database Setup
 mongoose.connect(config.database, { useMongoClient: true });
@@ -27,7 +28,9 @@ task_dir = require('./config/cron');
 
 // for file upload
 app.use(fileUpload());
-app.use('/upload_files', express.static('upload_files'))
+app.use('/upload_files', express.static('upload_files'));
+
+
 // for testing
 app.use(cors());
 
@@ -47,6 +50,7 @@ socketEvents(io);
 
 // Set static file location for production
 // app.use(express.static(__dirname + '/public'));
+
 // Setting up basic middleware for all Express requests
 app.use(bodyParser.urlencoded({ extended: false })); // Parses urlencoded bodies
 app.use(bodyParser.json()); // Send JSON responses
@@ -55,7 +59,7 @@ app.use(logger('dev')); // Log requests to API using morgan
 // Enable CORS from client-side
 app.use((req, res, next) => {
   // res.header('Access-Control-Allow-Origin', 'http://localhost:8080');
-    var allowedOrigins = ['http://localhost:8080', 'http://localhost:3001', 'http://178.128.73.230:3001', 'http://localhost:3000', 'http://178.128.73.230:3000', 'http://178.128.73.230:9001', 'http://178.128.73.230:8080'];
+    var allowedOrigins = ['http://localhost:8080', 'http://localhost:3001', 'http://192.168.2.103:3000', 'http://localhost:3000', 'http://178.128.73.230:3000', 'http://178.128.73.230:9001', 'http://178.128.73.230:8080'];
     var origin = req.headers.origin;
     if(allowedOrigins.indexOf(origin) > -1){
         res.setHeader('Access-Control-Allow-Origin', origin);
@@ -66,7 +70,6 @@ app.use((req, res, next) => {
   next();
 });
 
-
 schedule = require('node-schedule');
 schedule.scheduleJob("*/1 * * * *", function () { // every 1 min
 // schedule.scheduleJob("0 0 */12 * * *", function () { // every 12 hour
@@ -74,6 +77,8 @@ schedule.scheduleJob("*/1 * * * *", function () { // every 1 min
     pdt_controller.getProductSchedule();
     console.log('-----------------------Start Order Scheduling---------------------------');
     order_controller.getOrderSchedule();
+    console.log('-----------------------Start Feedback Scheduling------------------------');
+    feedback_controller.getFeedbackSchedule();
 });
 
 // Import routes to be served

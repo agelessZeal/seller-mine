@@ -16,8 +16,7 @@ const mws_access = config.MWS_SECRET || "";
 var amazonMws = require("amazon-mws")("AKIAIEGT53RIXYQUCTPQ", "VdToubCLaeVs+ngo3g7aIGCUzlqsisfCVWnKCga6");
 
 exports.getOrder = function(req, res, next) {
-  var user_id = req.query.userId
-  // var user_id = "5b8d2195df84c010229fd2df";
+  var user_id = req.query.userId;
   User.findById(user_id, (err, user) => {
     if (err) {
       res.status(400).json({ error: 'No user could be found for this ID.' });
@@ -54,8 +53,7 @@ exports.getOrder = function(req, res, next) {
 };
 
 exports.getOrderItem = function(req, res, next) {
-  var user_id = req.query.userId
-  // var user_id = "5b8d2195df84c010229fd2df";
+  var user_id = req.query.userId;
   let orderId = req.params.id;
   User.findById(user_id, (err, user) => {
     if (err) {
@@ -150,9 +148,7 @@ function formatOrderItem(resp, calb) {
 }
 
 exports.list = function(req, res, next) {
-  var user_id = req.query.userId
-  // var user_id = "5b8d2195df84c010229fd2df";
-
+  var user_id = req.query.userId;
   User.findById(user_id, (err, user) => {
     if (err) {
       res.status(400).json({ error: 'No user could be found for this ID.' });
@@ -160,7 +156,8 @@ exports.list = function(req, res, next) {
     }
 
     var sellerId = user.SellerId;
-    Order.find({sellerId: sellerId}).populate("orderItem").limit(150).exec(function(err, orders) { ///7Lines-code
+
+    Order.find({sellerId: sellerId}).populate("orderItem").exec(function(err, orders) {
       if (err) {
         console.log(err);
       }
@@ -176,8 +173,10 @@ exports.filterList = function(req, res, next) {
   let filter_items = req.body.filter_items;
   console.log(date_start, date_end, filter_items);
 
-  // var user_id = req.body.userId
-  var user_id = "5b8d2195df84c010229fd2df";
+  var user_id = req.body.userId;
+  if(config.test_mode){
+      user_id = "5b8d2195df84c010229fd2df";
+  }
 
   User.findById(user_id, (err, user) => {
     if (err) {
@@ -191,56 +190,61 @@ exports.filterList = function(req, res, next) {
     if ((date_start && date_end) && (filter_items && filter_items.length)) {
       date_start = moment(date_start, "YYYY/MM/DD").format("YYYY, M, D");
       date_end = moment(date_end, "YYYY/MM/DD").format("YYYY, M, D");
-      // query.where = {PurchaseDate: {$gte: new Date(date_start), $lt: new Date(date_end)}};
-      Order.find(
-        {
-          $and: [
+        Order.aggregate([
             {
-              PurchaseDate: {
-                $gte: new Date(date_start), $lt: new Date(date_end)
-              },
-              sellerId: sellerId
-            },
-            {
-              $or: [
-                {
-                  FulfillmentChannel: {
-                    $in: filter_items
-                  }
-                }, {
-                  OrderStatus: {
-                    $in: filter_items
-                  }
-                },
-                {
-                  sent_email_status: {
-                    $in: filter_items
-                  }
+                $match:{
+                    SellerId: sellerId,
+                    PurchaseDate: { "$gte":  new Date(date_start).toISOString(),"$lt": new Date(date_end).toISOString()},
+                    $or: [
+                        {
+                            FulfillmentChannel: {
+                                $in: filter_items
+                            }
+                        }, {
+                            OrderStatus: {
+                                $in: filter_items
+                            }
+                        },
+                        {
+                            sent_email_status: {
+                                $in: filter_items
+                            }
+                        }
+                    ]
                 }
-              ]
             }
-          ]
-        }
-      ).populate("orderItem")
-        .limit(150).collation( { locale: 'en', strength: 2 }).exec(function(err, orders) {
-        if (err) {
-          console.log(err);
-        }
-        return res.status(200).json({ orders: orders });
-      });
+        ]).exec(function (err,orders) {
+            if (err) {
+                console.log(err);
+            }
+            OrderItem.populate(orders,{path:'orderItem'},function (err,populatedOrders) {
+                if (err) {
+                    console.log(err);
+                }
+                return res.status(200).json({ orders: populatedOrders });
+            });
+        });
+
     } else if (date_start && date_end) {
       date_start = moment(date_start, "YYYY/MM/DD").format("YYYY, M, D");
       date_end = moment(date_end, "YYYY/MM/DD").format("YYYY, M, D");
-      Order.find({ sellerId: sellerId, PurchaseDate: { $gte: new Date(date_start), $lt: new Date(date_end) } }).populate("orderItem")
-        .limit(150).exec(function(err, orders) {
-        if (err) {
-          console.log(err);
-        }
-        return res.status(200).json({ orders: orders });
+      Order.aggregate([
+          {$match:{SellerId: sellerId,PurchaseDate: { "$gte":  new Date(date_start).toISOString(),"$lt": new Date(date_end).toISOString()}}}
+      ]).exec(function (err,orders) {
+          if (err) {
+              console.log(err);
+          }
+          OrderItem.populate(orders,{path:'orderItem'},function (err,populatedOrders) {
+              if (err) {
+                  console.log(err);
+              }
+              return res.status(200).json({ orders: populatedOrders });
+          });
       });
+
     } else if (filter_items && filter_items.length) {
       Order.find({
-            sellerId: sellerId,
+            SellerId: sellerId,
             $or: [
               {
                 FulfillmentChannel:
@@ -257,15 +261,15 @@ exports.filterList = function(req, res, next) {
               }
             ]
           }).populate("orderItem")
-        .limit(150).collation( { locale: 'en', strength: 2 }).exec(function(err, orders) {
+          .collation( { locale: 'en', strength: 2 }).exec(function(err, orders) {
         if (err) {
           console.log(err);
         }
         return res.status(200).json({ orders: orders });
       });
     } else {
-      Order.find({sellerId: sellerId}).populate("orderItem")
-        .limit(150).exec(function(err, orders) {
+      Order.find({SellerId: sellerId}).populate("orderItem")
+          .exec(function(err, orders) {
         if (err) {
           console.log(err);
         }
@@ -286,7 +290,6 @@ exports.getOrderAnalysis = function(req, res, next) {
   //{ $match: { mydate: { $lte: new Date( '12/01/1998' ) } } },
   // var user_id = req.body.userId
   var user_id = "5b8d2195df84c010229fd2df";
-
   User.findById(user_id, (err, user) => {
     if (err) {
       res.status(400).json({ error: 'No user could be found for this ID.' });
@@ -297,7 +300,7 @@ exports.getOrderAnalysis = function(req, res, next) {
     Order.aggregate([
         {
           $match: {
-            sellerId: sellerId
+            SellerId: sellerId
           }
         },
         {
@@ -1031,7 +1034,10 @@ exports.dashboardSummary = function (req, res, next) {
 
   // user id
   // sellerID = A1LWZ980X488GK
-  var user_id = "5b8d2195df84c010229fd2df";
+  var user_id = req.body.userId;
+  if(config.test_mode){
+     user_id = "5b8d2195df84c010229fd2df";
+  }
 
   User.findById(user_id, (err, user) => {
     if (err) {
@@ -1062,7 +1068,7 @@ exports.dashboardSummary = function (req, res, next) {
           summary.totalProduct = products;
 
           Order.find({
-            sellerId: sellerId, PurchaseDate: { $gte: new Date(date_start), $lte: new Date(date_end) }
+            SellerId: sellerId, PurchaseDate: { $gte: new Date(date_start), $lte: new Date(date_end) }
           }).count().exec(function (err, orders) {
               if (err){console.log(err);}
 
@@ -1118,7 +1124,7 @@ exports.dashboardSummary = function (req, res, next) {
 
           summary.totalProduct = products;
 
-          Order.find({sellerId: sellerId}).count().exec(function (err, orders) {
+          Order.find({SellerId: sellerId}).count().exec(function (err, orders) {
               if (err){console.log(err);}
 
               summary.totalOrder = orders;
