@@ -81,7 +81,7 @@ module.exports = BaseController.extend({
     },
     getCreatedAfterTime: async function (sellerID) {
         let orders;
-        orders = await OrderModel.find({SellerId:sellerID,OrderStatus:'Pending'}).sort({PurchaseDate:-1});
+        orders = await OrderModel.find({SellerId:sellerID,OrderStatus:'Pending'}).sort({PurchaseDate:1});
         if(orders.length<1){
             return "1994-07-05T16:00:00Z";
         }else{
