@@ -193,6 +193,15 @@ module.exports = BaseController.extend({
                 prevOderItem.currency = 'USD';
             }
             await prevOderItem.save();
+            
+            
+            let orderInfo = await OrderModel.findOne({AmazonOrderId: amazonOrderID});
+            if(orderInfo != null){
+                orderInfo.haveItem = true;
+                orderInfo.orderItem.push(prevOderItem._id);
+                await orderInfo.save();
+            }
+            
         } else {
 
             let orderItemObj = {};
