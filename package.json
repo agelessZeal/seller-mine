@@ -29,7 +29,7 @@
     "cors": "^2.8.4",
     "crypto": "^1.0.1",
     "express": "^4.13.4",
-    "express-fileupload": "^0.4.0",
+    "express-fileupload": "^1.1.9",
     "jsonwebtoken": "^5.7.0",
     "mailchimp-v3": "^1.0.1",
     "mailgun-js": "^0.22.0",
